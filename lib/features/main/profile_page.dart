@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../admin/manage_listings_page.dart';
+import 'wishlist_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -210,7 +211,16 @@ class _ProfilePageState extends State<ProfilePage> {
                 );
               },
             ),
-          menuItem(Icons.favorite, "Wishlist"),
+          menuItem(
+            Icons.favorite,
+            "Wishlist",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const WishlistPage()),
+              );
+            },
+          ),
           menuItem(Icons.history, "Purchase History"),
 
           const SizedBox(height: 70),

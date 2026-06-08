@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:gachamerch/services/auth_service.dart';
 import 'package:gachamerch/services/transaction_service.dart';
+import 'package:gachamerch/services/wishlist_service.dart';
 import 'package:gachamerch/features/main/profile_page.dart';
 import 'package:gachamerch/features/main/transaction_page.dart';
 import 'package:gachamerch/theme/app_theme.dart';
@@ -43,6 +44,9 @@ class _MainMenuPageState extends State<MainMenuPage> {
 
   List<Map<String, dynamic>> _products = [];
   String? _error; // pesan error fetch (mis. DB/XAMPP mati) untuk ditampilkan
+  final Set<String> _wishlistIds = {};
+  String? _pulsingWishlistId;
+  DateTime? _lastWishlistActionAt;
 
   static const int _pageSize = 10;
   int _visibleCount = _pageSize;
@@ -60,6 +64,17 @@ class _MainMenuPageState extends State<MainMenuPage> {
     });
 
     _fetchProducts();
+    _loadWishlist();
+  }
+
+  Future<void> _loadWishlist() async {
+    final items = await WishlistService.list();
+    if (!mounted) return;
+    setState(() {
+      _wishlistIds
+        ..clear()
+        ..addAll(items.map((item) => item["id"]?.toString()).whereType<String>());
+    });
   }
 
   Future<void> _fetchProducts() async {
@@ -116,12 +131,59 @@ class _MainMenuPageState extends State<MainMenuPage> {
       v is int ? v : int.tryParse('${v ?? 0}') ?? 0;
 
   void _showSnack(String message, {bool isError = true}) {
-    ScaffoldMessenger.of(context).showSnackBar(
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: isError ? Colors.red : Colors.green,
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
       ),
+    );
+  }
+
+  Future<void> _toggleWishlist(Map<String, dynamic> product) async {
+    final now = DateTime.now();
+    final lastAction = _lastWishlistActionAt;
+    if (lastAction != null &&
+        now.difference(lastAction) < const Duration(seconds: 3)) {
+      _showSnack("Please don't spam the wishlist button.");
+      return;
+    }
+
+    final id = product["id"]?.toString();
+    if (id == null) return;
+    _lastWishlistActionAt = now;
+
+    final wasWishlisted = _wishlistIds.contains(id);
+    final changed = wasWishlisted
+        ? await WishlistService.remove(id)
+        : await WishlistService.add(product);
+    if (!mounted) return;
+
+    if (changed) {
+      setState(() {
+        if (wasWishlisted) {
+          _wishlistIds.remove(id);
+        } else {
+          _wishlistIds.add(id);
+        }
+        _pulsingWishlistId = id;
+      });
+
+      Future.delayed(const Duration(milliseconds: 160), () {
+        if (!mounted) return;
+        setState(() => _pulsingWishlistId = null);
+      });
+    }
+
+    final name = (product['name'] ?? 'Item').toString();
+    _showSnack(
+      wasWishlisted
+          ? '$name removed from wishlist.'
+          : '$name added to wishlist.',
+      isError: false,
     );
   }
 
@@ -338,99 +400,170 @@ class _MainMenuPageState extends State<MainMenuPage> {
             crossAxisSpacing: 12,
             childAspectRatio: 0.68,
           ),
-          itemBuilder: (context, i) => Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                  child: //_isLoading
-                      // ? shimmerBox(height: 110, width: double.infinity)
-                      // :
-                      (_products[i]['image'] != null && _products[i]['image'].toString().isNotEmpty)
-                          ? Container(
-                              height: 110,
-                              width: double.infinity,
-                              color: AppColors.background,
-                              // Gambar senjata dari wiki rasionya tinggi/besar, jadi
-                              // dikasih ruang lebih (terutama bawah) supaya tampil lebih
-                              // kecil & utuh, tidak mepet ke tepi. Makanan tetap kecil.
-                              padding: _products[i]['item_type'] == 'weapon'
-                                  ? const EdgeInsets.fromLTRB(20, 12, 20, 20)
-                                  : const EdgeInsets.all(6),
-                              // contain = seluruh gambar muat utuh (tidak di-crop),
-                              // ukuran beda-beda menyesuaikan tanpa terpotong.
-                              child: Image.network(
-                                _products[i]['image'],
-                                fit: BoxFit.contain,
-                                alignment: Alignment.center,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey)),
-                              ),
-                            )
-                          : const SizedBox(height: 110, child: Center(child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey))),
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: // _isLoading
-                      // ? shimmerBox(height: 10, width: 80)
-                      // :
-                      Text(
-                          _products[i]['name'] ?? 'Unknown',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+          itemBuilder: (context, i) {
+            final product = _products[i];
+            final productId = product["id"]?.toString();
+            final isWishlisted =
+                productId != null && _wishlistIds.contains(productId);
+            final isPulsing =
+                productId != null && _pulsingWishlistId == productId;
+
+            return Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(12),
                         ),
-                ),
-                const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    '\$${_products[i]['price'] ?? 0}',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
+                        child: //_isLoading
+                            // ? shimmerBox(height: 110, width: double.infinity)
+                            // :
+                            (product['image'] != null &&
+                                    product['image'].toString().isNotEmpty)
+                                ? Container(
+                                    height: 110,
+                                    width: double.infinity,
+                                    color: AppColors.background,
+                                    // Gambar senjata dari wiki rasionya tinggi/besar, jadi
+                                    // dikasih ruang lebih (terutama bawah) supaya tampil lebih
+                                    // kecil & utuh, tidak mepet ke tepi. Makanan tetap kecil.
+                                    padding: product['item_type'] == 'weapon'
+                                        ? const EdgeInsets.fromLTRB(
+                                            20,
+                                            12,
+                                            20,
+                                            20,
+                                          )
+                                        : const EdgeInsets.all(6),
+                                    // contain = seluruh gambar muat utuh (tidak di-crop),
+                                    // ukuran beda-beda menyesuaikan tanpa terpotong.
+                                    child: Image.network(
+                                      product['image'],
+                                      fit: BoxFit.contain,
+                                      alignment: Alignment.center,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Center(
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          size: 50,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(
+                                    height: 110,
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.image_not_supported,
+                                        size: 50,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(18),
+                            onTap: () => _toggleWishlist(product),
+                            child: AnimatedScale(
+                              scale: isPulsing ? 1.22 : 1,
+                              duration: const Duration(milliseconds: 140),
+                              curve: Curves.easeOutBack,
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: isWishlisted
+                                      ? AppColors.primary.withValues(alpha: 0.18)
+                                      : AppColors.surface.withValues(alpha: 0.9),
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.55,
+                                    ),
+                                  ),
+                                ),
+                                child: Icon(
+                                  isWishlisted
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  size: 19,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: // _isLoading
+                        // ? shimmerBox(height: 10, width: 80)
+                        // :
+                        Text(
+                      product['name'] ?? 'Unknown',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    'Stock: ${_products[i]['stock'] ?? 0}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      '\$${product['price'] ?? 0}',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: // _isLoading
-                      // ? shimmerBox(height: 30, width: double.infinity)
-                      // :
-                      ElevatedButton(
-                          onPressed: _asInt(_products[i]['stock']) > 0
-                              ? () => _showBuyDialog(_products[i])
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(30),
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text(
-                            _asInt(_products[i]['stock']) > 0
-                                ? 'Buy'
-                                : 'Out of stock',
-                          ),
-                        ),
-                ),
-              ],
-            ),
-          ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      'Stock: ${product['stock'] ?? 0}',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ),
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: // _isLoading
+                        // ? shimmerBox(height: 30, width: double.infinity)
+                        // :
+                        ElevatedButton(
+                      onPressed: _asInt(product['stock']) > 0
+                          ? () => _showBuyDialog(product)
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(30),
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(
+                        _asInt(product['stock']) > 0 ? 'Buy' : 'Out of stock',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
 
         if (_visibleCount < _products.length)
