@@ -431,51 +431,75 @@ class _CatalogPickerPageState extends State<CatalogPickerPage>
     if (_loading || _error != null) return const SizedBox.shrink();
     final cats = _categories;
     if (cats.isEmpty) return const SizedBox.shrink();
+    final selectedLabel = _category ?? "All categories";
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: AppColors.secondary.withValues(alpha: 0.10),
-          // Kapsul penuh (pill).
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: AppColors.secondary.withValues(alpha: 0.5)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.filter_alt, size: 20, color: AppColors.secondary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String?>(
-                  value: _category,
-                  isExpanded: true,
-                  // Menu popup ikut membulat (efek kapsul, bukan kotak biasa).
-                  borderRadius: BorderRadius.circular(20),
-                  icon: const Icon(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return PopupMenuButton<String>(
+            tooltip: "Filter category",
+            initialValue: _category ?? "",
+            position: PopupMenuPosition.under,
+            constraints: BoxConstraints.tightFor(width: constraints.maxWidth),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(16),
+              ),
+            ),
+            onSelected: (value) {
+              setState(() => _category = value.isEmpty ? null : value);
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem<String>(
+                value: "",
+                child: Text("All categories"),
+              ),
+              ...cats.map(
+                (c) => PopupMenuItem<String>(
+                  value: c,
+                  child: Text(c),
+                ),
+              ),
+            ],
+            child: Container(
+              height: 48,
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.10),
+                // Kapsul penuh (pill) sekaligus area tombol penuh.
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: AppColors.secondary.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.filter_alt,
+                    size: 20,
+                    color: AppColors.secondary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      selectedLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: AppColors.text),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Icon(
                     Icons.keyboard_arrow_down,
                     color: AppColors.secondary,
                   ),
-                  hint: const Text("All categories"),
-                  items: [
-                    const DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text("All categories"),
-                    ),
-                    ...cats.map(
-                      (c) => DropdownMenuItem<String?>(
-                        value: c,
-                        child: Text(c),
-                      ),
-                    ),
-                  ],
-                  onChanged: (v) => setState(() => _category = v),
-                ),
+                ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
