@@ -3,6 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../services/cart_service.dart';
 import '../../services/transaction_service.dart';
 import '../../utils/currency_formatter.dart';
+import '../cart/cart_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -98,7 +99,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               Text(
                                 widget.product['name'] ?? 'Item',
                                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                maxLines: 2,
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
@@ -214,10 +215,50 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Product Detail'),
-        backgroundColor: AppColors.surface,
-        foregroundColor: AppColors.text,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         elevation: 1,
+        title: const Text("Product Detail", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        actions: [
+          ValueListenableBuilder<List<Map<String, dynamic>>>(
+            valueListenable: CartService.cartItems,
+            builder: (context, cartItems, child) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart_outlined),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CartPage()),
+                      );
+                    },
+                  ),
+                  if (cartItems.isNotEmpty)
+                    Positioned(
+                      right: 4,
+                      top: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '${cartItems.length}',
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(width: 10),
+          const Icon(Icons.notifications_none),
+          const SizedBox(width: 10),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

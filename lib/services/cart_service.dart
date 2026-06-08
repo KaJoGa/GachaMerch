@@ -1,9 +1,37 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'transaction_service.dart';
 
 class CartService {
   // Setiap item berformat: { 'product': Map<String,dynamic>, 'quantity': int }
   static final ValueNotifier<List<Map<String, dynamic>>> cartItems = ValueNotifier([]);
+
+  static Future<void> loadCart() async {
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString("email");
+    if (email == null) return;
+    
+    final cartStr = prefs.getString("cart_$email");
+    if (cartStr != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(cartStr);
+        cartItems.value = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
+      } catch (_) {
+        cartItems.value = [];
+      }
+    } else {
+      cartItems.value = [];
+    }
+  }
+
+  static Future<void> saveCart() async {
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString("email");
+    if (email == null) return;
+    
+    await prefs.setString("cart_$email", jsonEncode(cartItems.value));
+  }
 
   static void addToCart(Map<String, dynamic> product, int quantity) {
     final currentCart = List<Map<String, dynamic>>.from(cartItems.value);
@@ -21,12 +49,14 @@ class CartService {
     }
     
     cartItems.value = currentCart;
+    saveCart();
   }
 
   static void removeFromCart(int index) {
     final currentCart = List<Map<String, dynamic>>.from(cartItems.value);
     currentCart.removeAt(index);
     cartItems.value = currentCart;
+    saveCart();
   }
   
   static void updateQuantity(int index, int newQuantity) {
@@ -34,10 +64,12 @@ class CartService {
     final currentCart = List<Map<String, dynamic>>.from(cartItems.value);
     currentCart[index]['quantity'] = newQuantity;
     cartItems.value = currentCart;
+    saveCart();
   }
   
-  static void clearCart() {
+  static void clearCart({bool save = true}) {
     cartItems.value = [];
+    if (save) saveCart();
   }
 
   static Future<({bool ok, String? error})> checkout() async {
@@ -57,7 +89,7 @@ class CartService {
           return (ok: false, error: 'Failed buying ${item['product']['name']}: ${res.error}');
         }
       }
-      clearCart();
+      clearCart(save: true);
       return (ok: true, error: null);
     } catch (e) {
       return (ok: false, error: 'Checkout failed: $e');

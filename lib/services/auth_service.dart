@@ -46,6 +46,7 @@ class AuthService {
         await prefs.setString("token", token);
         // Simpan role untuk gating fitur (admin vs user).
         await prefs.setString("role", (data["role"] ?? "user").toString());
+        await prefs.setString("email", email);
 
         return (ok: true, error: null);
       }

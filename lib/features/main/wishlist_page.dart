@@ -176,7 +176,7 @@ class _WishlistPageState extends State<WishlistPage> {
                             Text(
                               (item["name"] ?? "Item").toString(),
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              maxLines: 2,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 8),

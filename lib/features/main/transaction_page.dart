@@ -189,7 +189,7 @@ class _TransactionPageState extends State<TransactionPage> {
                             Text(
                               (t['item_name'] ?? 'Item').toString(),
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              maxLines: 2,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),

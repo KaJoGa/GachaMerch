@@ -133,7 +133,7 @@ class _CartPageState extends State<CartPage> {
                                             Text(
                                               product['name'] ?? 'Unknown',
                                               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                                              maxLines: 2,
+                                              maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                             const SizedBox(height: 4),
