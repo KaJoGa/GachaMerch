@@ -17,13 +17,15 @@ function mapRow(r) {
         name: isWeapon ? r.w_name : r.f_name,
         image: isWeapon ? r.w_image : r.f_image,
         category: isWeapon ? (r.w_type || "Weapon") : (r.f_type || "Food"),
+        description: isWeapon ? r.w_effect : r.f_effect,
+        quality: isWeapon ? r.w_quality : r.f_quality,
     };
 }
 
 const SELECT_JOIN = `
     SELECT l.id, l.item_type, l.item_id, l.price, l.stock, l.initial_stock, l.created_at,
-           w.name AS w_name, w.image AS w_image, w.type AS w_type,
-           f.name AS f_name, f.image AS f_image, f.type AS f_type
+           w.name AS w_name, w.image AS w_image, w.type AS w_type, w.passive AS w_effect, w.rarity AS w_quality,
+           f.name AS f_name, f.image AS f_image, f.type AS f_type, f.effect AS f_effect, f.quality AS f_quality
       FROM listings l
       LEFT JOIN weapons w ON l.item_type = 'weapon' AND l.item_id = w.id
       LEFT JOIN foods   f ON l.item_type = 'food'   AND l.item_id = f.id`;

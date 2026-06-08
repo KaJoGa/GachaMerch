@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../services/transaction_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/currency_formatter.dart';
 
 class TransactionPage extends StatefulWidget {
-  const TransactionPage({super.key});
+  final String searchQuery;
+  
+  const TransactionPage({super.key, this.searchQuery = ''});
 
   @override
   State<TransactionPage> createState() => _TransactionPageState();
@@ -41,14 +44,14 @@ class _TransactionPageState extends State<TransactionPage> {
     }
   }
 
-  /// Format tanggal sederhana: YYYY-MM-DD HH:mm (waktu lokal).
+  /// Format tanggal ala Tokopedia (DD MMM YYYY).
   String _fmtDate(String? raw) {
     if (raw == null) return '';
     final d = DateTime.tryParse(raw);
     if (d == null) return raw;
     final l = d.toLocal();
-    String two(int n) => n.toString().padLeft(2, '0');
-    return "${l.year}-${two(l.month)}-${two(l.day)} ${two(l.hour)}:${two(l.minute)}";
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+    return "${l.day} ${months[l.month - 1]} ${l.year}";
   }
 
   @override
@@ -92,38 +95,128 @@ class _TransactionPageState extends State<TransactionPage> {
       );
     }
 
+    final filtered = _items.where((t) {
+      if (widget.searchQuery.isEmpty) return true;
+      final name = (t['item_name'] ?? '').toString().toLowerCase();
+      return name.contains(widget.searchQuery.toLowerCase());
+    }).toList();
+
+    if (filtered.isEmpty && widget.searchQuery.isNotEmpty) {
+      return RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          children: [
+            const SizedBox(height: 180),
+            Center(
+              child: Column(
+                children: [
+                  const Icon(Icons.search_off, size: 64, color: Colors.grey),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No results for "${widget.searchQuery}"',
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.builder(
         padding: const EdgeInsets.all(12),
-        itemCount: _items.length,
+        itemCount: filtered.length,
         itemBuilder: (context, i) {
-          final t = _items[i];
+          final t = filtered[i];
           return Card(
+            color: Colors.white,
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey.shade300, width: 1),
             ),
-            child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: AppColors.secondary,
-                child: Icon(Icons.shopping_bag, color: Colors.white),
-              ),
-              title: Text(
-                (t['item_name'] ?? 'Item').toString(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                "Qty: ${t['quantity']} × \$${t['unit_price']}\n${_fmtDate(t['created_at']?.toString())}",
-              ),
-              isThreeLine: true,
-              trailing: Text(
-                "\$${t['total_price']}",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // HEADER
+                  Row(
+                    children: [
+                      const Icon(Icons.storefront, size: 20, color: Colors.amber),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "GachaMerch",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      const Spacer(),
+                      Text(
+                        _fmtDate(t['created_at']?.toString()),
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  
+                  // BODY
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          width: 60,
+                          height: 60,
+                          color: Colors.grey.shade200,
+                          child: t['item_image'] != null
+                              ? Image.network(
+                                  t['item_image'],
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.grey),
+                                )
+                              : const Icon(Icons.image, color: Colors.grey),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              (t['item_name'] ?? 'Item').toString(),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "${t['quantity']} item",
+                              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text(
+                            "Total Price",
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          Text(
+                            "${CurrencyFormatter.format(t['total_price'])}",
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           );

@@ -8,7 +8,9 @@ import '../admin/manage_listings_page.dart';
 import 'wishlist_page.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final VoidCallback? onNavigateToTransactions;
+
+  const ProfilePage({super.key, this.onNavigateToTransactions});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -221,7 +223,7 @@ class _ProfilePageState extends State<ProfilePage> {
               );
             },
           ),
-          menuItem(Icons.history, "Purchase History"),
+          menuItem(Icons.history, "Purchase History", onTap: widget.onNavigateToTransactions),
 
           const SizedBox(height: 70),
 

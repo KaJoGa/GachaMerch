@@ -74,10 +74,14 @@ async function createTransaction(userId, listingId, quantity) {
 
 async function getUserTransactions(userId) {
     const [rows] = await db.execute(
-        `SELECT id, listing_id, item_name, quantity, unit_price, total_price, created_at
-           FROM transactions
-          WHERE user_id = ?
-          ORDER BY id DESC`,
+        `SELECT t.id, t.listing_id, t.item_name, t.quantity, t.unit_price, t.total_price, t.created_at,
+                COALESCE(w.image, f.image) as item_image
+           FROM transactions t
+           LEFT JOIN listings l ON t.listing_id = l.id
+           LEFT JOIN weapons w ON l.item_type = 'weapon' AND l.item_id = w.id
+           LEFT JOIN foods f ON l.item_type = 'food' AND l.item_id = f.id
+          WHERE t.user_id = ?
+          ORDER BY t.id DESC`,
         [userId]
     );
     return rows;
