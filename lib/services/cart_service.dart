@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'transaction_service.dart';
+import 'notification_service.dart';
 
 class CartService {
   // Setiap item berformat: { 'product': Map<String,dynamic>, 'quantity': int }
@@ -50,6 +51,11 @@ class CartService {
     
     cartItems.value = currentCart;
     saveCart();
+
+    NotificationService.addNotification(
+      "Don't forget to checkout!",
+      "You added ${product['name']} to your cart.",
+    );
   }
 
   static void removeFromCart(int index) {

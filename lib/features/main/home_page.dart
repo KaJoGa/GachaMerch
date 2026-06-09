@@ -11,6 +11,8 @@ import 'package:gachamerch/features/cart/cart_page.dart';
 import 'package:gachamerch/features/product/product_detail_page.dart';
 import 'package:gachamerch/features/main/profile_page.dart';
 import 'package:gachamerch/features/main/transaction_page.dart';
+import 'package:gachamerch/features/main/notification_page.dart';
+import 'package:gachamerch/services/notification_service.dart';
 import 'package:gachamerch/theme/app_theme.dart';
 import 'package:gachamerch/utils/currency_formatter.dart';
 
@@ -74,6 +76,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
     _fetchProducts();
     _loadWishlist();
     CartService.loadCart();
+    NotificationService.loadNotifications();
   }
 
   Future<void> _loadWishlist() async {
@@ -820,15 +823,17 @@ class _MainMenuPageState extends State<MainMenuPage> {
                           Positioned(
                             right: 4,
                             top: 4,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                '${cartItems.length}',
-                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            child: IgnorePointer(
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '${cartItems.length}',
+                                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                ),
                               ),
                             ),
                           ),
@@ -836,9 +841,38 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     );
                   },
                 ),
-                const SizedBox(width: 10),
-                const Icon(Icons.notifications_none),
-                const SizedBox(width: 10),
+                ValueListenableBuilder<List<Map<String, dynamic>>>(
+                  valueListenable: NotificationService.notifications,
+                  builder: (context, notifs, child) {
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.notifications_none),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const NotificationPage()),
+                            );
+                          },
+                        ),
+                        if (notifs.isNotEmpty)
+                          Positioned(
+                            right: 4,
+                            top: 4,
+                            child: IgnorePointer(
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                child: Text('${notifs.length}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
               ],
             ),
 

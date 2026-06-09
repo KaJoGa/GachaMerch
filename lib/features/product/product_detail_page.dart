@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/cart_service.dart';
 import '../../services/transaction_service.dart';
+import '../../services/notification_service.dart';
+import '../main/notification_page.dart';
 import '../../utils/currency_formatter.dart';
 import '../cart/cart_page.dart';
 
@@ -239,15 +241,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     Positioned(
                       right: 4,
                       top: 4,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          '${cartItems.length}',
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      child: IgnorePointer(
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${cartItems.length}',
+                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ),
@@ -255,9 +259,38 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               );
             },
           ),
-          const SizedBox(width: 10),
-          const Icon(Icons.notifications_none),
-          const SizedBox(width: 10),
+          ValueListenableBuilder<List<Map<String, dynamic>>>(
+            valueListenable: NotificationService.notifications,
+            builder: (context, notifs, child) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NotificationPage()),
+                      );
+                    },
+                  ),
+                  if (notifs.isNotEmpty)
+                    Positioned(
+                      right: 4,
+                      top: 4,
+                      child: IgnorePointer(
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                          child: Text('${notifs.length}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ),
+                ],
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
