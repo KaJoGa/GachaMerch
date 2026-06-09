@@ -28,6 +28,51 @@ The original assignment asks for weapon CRUD. In this implementation, admin CRUD
 | Local storage | SharedPreferences |
 | HTTP client | Flutter `http`, backend `mysql2/promise` |
 
+## Getting Started / How to Run
+
+### 1. Database Setup
+- Open your MySQL server (e.g., using XAMPP, MAMP, or native MySQL).
+- Create a new database named `gachamerch`.
+- Import the provided `gachamerch.sql` file into the `gachamerch` database to set up all required tables (`users`, `foods`, `weapons`, `listings`, `transactions`) and sample data.
+
+### 2. Backend Setup (Node.js)
+1. Open a terminal and navigate to the `backend` directory:
+   ```bash
+   cd backend
+   ```
+2. Install the necessary dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file in the `backend` folder containing your database configuration. Example:
+   ```env
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASSWORD=
+   DB_NAME=gachamerch
+   PORT=3000
+   ```
+4. Start the backend server:
+   ```bash
+   npm start
+   ```
+   *(The server will typically run on `http://localhost:3000`)*
+
+### 3. Frontend Setup (Flutter)
+1. Ensure you have [Flutter](https://docs.flutter.dev/get-started/install) installed and properly set up.
+2. Open a new terminal and navigate to the root directory of the Flutter project.
+3. Fetch the Flutter dependencies:
+   ```bash
+   flutter pub get
+   ```
+4. Run the app on your preferred device or emulator:
+   ```bash
+   flutter run
+   ```
+
+> **Note on Localhost Connections:** 
+> If you are running the Flutter app on an Android Emulator, it accesses your local computer's backend via `http://10.0.2.2:3000`. If you are running on Web, Windows, or an iOS Simulator, it uses `http://localhost:3000`. Ensure the base URL in the Flutter app matches your testing environment.
+
 ## Main Features
 
 ### Authentication
