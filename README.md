@@ -290,6 +290,7 @@ Important tables:
 | `users` | Stores user account, hashed password, role, and bearer token. |
 | `weapons` | Master weapon catalog. |
 | `foods` | Master food catalog. |
+| `artifacts` | Master artifact catalog. |
 | `listings` | Items currently listed for sale, with price and stock. |
 | `transactions` | Purchase history with item and price snapshots. |
 
@@ -301,6 +302,9 @@ Important migration scripts:
 | `backend/scripts/migrateListings.js` | Creates the `listings` table. |
 | `backend/scripts/migrateInitialStock.js` | Adds `initial_stock` for stock health indicator. |
 | `backend/scripts/migrateTransactions.js` | Creates the `transactions` table. |
+| `backend/scripts/migrateArtifacts.js` | Creates the `artifacts` table and updates `item_type` enum in `listings`. |
+| `backend/scripts/seedArtifacts.js` | Scrapes Genshin Fandom for artifacts and saves to DB (can be slow). |
+| `backend/scripts/seedMockArtifacts.js` | Seeds a small set of mock artifacts to avoid Fandom timeouts. |
 
 ## Setup and Run
 
@@ -342,6 +346,19 @@ node scripts/migrateWeapons.js
 node scripts/migrateListings.js
 node scripts/migrateInitialStock.js
 node scripts/migrateTransactions.js
+node scripts/migrateArtifacts.js
+```
+
+### 5. Run Database Seeders (Optional)
+
+If you want to populate your database with catalog data:
+
+```bash
+# Seed artifacts from Genshin Fandom (Will run in background batches)
+node scripts/seedArtifacts.js
+
+# Or, if Fandom server is blocking you, seed 3 mock artifacts instead:
+node scripts/seedMockArtifacts.js
 ```
 
 ### 5. Run Backend Server

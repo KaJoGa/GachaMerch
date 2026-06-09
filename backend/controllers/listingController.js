@@ -9,7 +9,7 @@ function validatePayload(body, { requireItem }) {
     if (requireItem) {
         const itemType = (body.item_type ?? "").toString();
         if (!listingService.ITEM_TYPES.includes(itemType)) {
-            return { ok: false, error: "item_type must be 'weapon' or 'food'" };
+            return { ok: false, error: "item_type must be 'weapon', 'food', or 'artifact'" };
         }
         const itemId = Number(body.item_id);
         if (!Number.isInteger(itemId) || itemId <= 0) {

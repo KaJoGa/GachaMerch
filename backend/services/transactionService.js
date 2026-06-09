@@ -30,7 +30,9 @@ async function createTransaction(userId, listingId, quantity) {
         }
 
         // Snapshot nama item dari tabel master.
-        const table = listing.item_type === "weapon" ? "weapons" : "foods";
+        let table = "weapons";
+        if (listing.item_type === "food") table = "foods";
+        if (listing.item_type === "artifact") table = "artifacts";
         const [itemRows] = await conn.execute(
             `SELECT name FROM ${table} WHERE id = ?`,
             [listing.item_id]
@@ -75,11 +77,12 @@ async function createTransaction(userId, listingId, quantity) {
 async function getUserTransactions(userId) {
     const [rows] = await db.execute(
         `SELECT t.id, t.listing_id, t.item_name, t.quantity, t.unit_price, t.total_price, t.created_at,
-                COALESCE(w.image, f.image) as item_image
+                COALESCE(w.image, f.image, a.image) as item_image
            FROM transactions t
            LEFT JOIN listings l ON t.listing_id = l.id
            LEFT JOIN weapons w ON l.item_type = 'weapon' AND l.item_id = w.id
            LEFT JOIN foods f ON l.item_type = 'food' AND l.item_id = f.id
+           LEFT JOIN artifacts a ON l.item_type = 'artifact' AND l.item_id = a.id
           WHERE t.user_id = ?
           ORDER BY t.id DESC`,
         [userId]

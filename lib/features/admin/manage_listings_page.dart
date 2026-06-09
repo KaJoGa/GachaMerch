@@ -186,6 +186,7 @@ class _ManageListingsPageState extends State<ManageListingsPage> {
             ButtonSegment(value: 'all', label: Text("All")),
             ButtonSegment(value: 'weapon', label: Text("Weapons")),
             ButtonSegment(value: 'food', label: Text("Food")),
+            ButtonSegment(value: 'artifact', label: Text("Artifacts")),
           ],
           selected: {_viewMode},
           onSelectionChanged: (s) => setState(() => _viewMode = s.first),
@@ -198,7 +199,7 @@ class _ManageListingsPageState extends State<ManageListingsPage> {
     final listings = _visibleListings;
     if (listings.isEmpty) {
       // Total tidak kosong, tapi mode terpilih tidak punya item.
-      final label = _viewMode == 'weapon' ? "weapons" : "food";
+      final label = _viewMode == 'weapon' ? "weapons" : (_viewMode == 'food' ? "food" : "artifacts");
       return Center(child: Text("No $label listed for sale."));
     }
 
@@ -309,12 +310,12 @@ class _CatalogPickerPageState extends State<CatalogPickerPage>
   String? _category; // null = semua kategori
   int _tabIndex = 0; // 0 = senjata, 1 = makanan
 
-  String get _currentType => _tabIndex == 0 ? 'weapon' : 'food';
+  String get _currentType => _tabIndex == 0 ? 'weapon' : (_tabIndex == 1 ? 'food' : 'artifact');
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _load();
   }
 
@@ -403,6 +404,7 @@ class _CatalogPickerPageState extends State<CatalogPickerPage>
           tabs: [
             Tab(text: "Weapons", icon: Icon(MdiIcons.sword)),
             const Tab(text: "Food", icon: Icon(Icons.restaurant)),
+            const Tab(text: "Artifacts", icon: Icon(Icons.category)),
           ],
         ),
       ),

@@ -7,6 +7,7 @@ const foodRoutes = require("./routes/foodRoutes");
 const authRoutes = require("./routes/authRoutes");
 const listingRoutes = require("./routes/listingRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
+const artifactRoutes = require("./routes/artifactRoutes");
 const verifyToken = require("./middleware/authMiddleware");
 const dbGuard = require("./middleware/dbGuard");
 const db = require("./config/db");
@@ -25,6 +26,7 @@ app.use("/", weaponRoutes);
 app.use("/", foodRoutes);
 app.use("/", listingRoutes);
 app.use("/", transactionRoutes);
+app.use("/", artifactRoutes);
 app.use("/auth", authRoutes);
 
 app.get("/profile", verifyToken, (req, res) => {

@@ -593,7 +593,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                                   height: 110,
                                   width: double.infinity,
                                   color: AppColors.background,
-                                  padding: product['item_type'] == 'weapon'
+                                  padding: product['item_type'] != 'food'
                                       ? const EdgeInsets.fromLTRB(20, 12, 20, 20)
                                       : const EdgeInsets.all(6),
                                   child: Image.network(

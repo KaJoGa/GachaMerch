@@ -1,6 +1,6 @@
 const db = require("../config/db");
 
-const ITEM_TYPES = ["weapon", "food"];
+const ITEM_TYPES = ["weapon", "food", "artifact"];
 
 // Gabungkan baris listing + data item master (name, image, kategori) menjadi
 // satu objek datar yang enak dipakai frontend.
@@ -14,21 +14,23 @@ function mapRow(r) {
         stock: r.stock,
         initial_stock: r.initial_stock,
         created_at: r.created_at,
-        name: isWeapon ? r.w_name : r.f_name,
-        image: isWeapon ? r.w_image : r.f_image,
-        category: isWeapon ? (r.w_type || "Weapon") : (r.f_type || "Food"),
-        description: isWeapon ? r.w_effect : r.f_effect,
-        quality: isWeapon ? r.w_quality : r.f_quality,
+        name: isWeapon ? r.w_name : (r.item_type === "artifact" ? r.a_name : r.f_name),
+        image: isWeapon ? r.w_image : (r.item_type === "artifact" ? r.a_image : r.f_image),
+        category: isWeapon ? (r.w_type || "Weapon") : (r.item_type === "artifact" ? (r.a_type || "Artifact") : (r.f_type || "Food")),
+        description: isWeapon ? r.w_effect : (r.item_type === "artifact" ? r.a_effect : r.f_effect),
+        quality: isWeapon ? r.w_quality : (r.item_type === "artifact" ? r.a_quality : r.f_quality),
     };
 }
 
 const SELECT_JOIN = `
     SELECT l.id, l.item_type, l.item_id, l.price, l.stock, l.initial_stock, l.created_at,
            w.name AS w_name, w.image AS w_image, w.type AS w_type, w.passive AS w_effect, w.rarity AS w_quality,
-           f.name AS f_name, f.image AS f_image, f.type AS f_type, f.effect AS f_effect, f.quality AS f_quality
+           f.name AS f_name, f.image AS f_image, f.type AS f_type, f.effect AS f_effect, f.quality AS f_quality,
+           a.name AS a_name, a.image AS a_image, a.type AS a_type, a.description AS a_effect, a.rarity AS a_quality
       FROM listings l
       LEFT JOIN weapons w ON l.item_type = 'weapon' AND l.item_id = w.id
-      LEFT JOIN foods   f ON l.item_type = 'food'   AND l.item_id = f.id`;
+      LEFT JOIN foods   f ON l.item_type = 'food'   AND l.item_id = f.id
+      LEFT JOIN artifacts a ON l.item_type = 'artifact' AND l.item_id = a.id`;
 
 async function getListings() {
     const [rows] = await db.execute(`${SELECT_JOIN} ORDER BY l.id DESC`);
@@ -49,6 +51,9 @@ async function getCatalog() {
     const [foods] = await db.execute(
         "SELECT id, name, image, type FROM foods ORDER BY name"
     );
+    const [artifacts] = await db.execute(
+        "SELECT id, name, image, type FROM artifacts ORDER BY name"
+    );
 
     return [
         ...weapons.map((w) => ({
@@ -65,13 +70,22 @@ async function getCatalog() {
             image: f.image,
             category: f.type || "Food",
         })),
+        ...artifacts.map((a) => ({
+            item_type: "artifact",
+            item_id: a.id,
+            name: a.name,
+            image: a.image,
+            category: a.type || "Artifact",
+        })),
     ];
 }
 
 // Cek item master ada. itemType dijamin sudah divalidasi (∈ ITEM_TYPES) oleh
 // controller, jadi pemilihan nama tabel di sini aman dari injeksi.
 async function itemExists(itemType, itemId) {
-    const table = itemType === "weapon" ? "weapons" : "foods";
+    let table = "weapons";
+    if (itemType === "food") table = "foods";
+    if (itemType === "artifact") table = "artifacts";
     const [rows] = await db.execute(`SELECT id FROM ${table} WHERE id = ?`, [itemId]);
     return rows.length > 0;
 }
