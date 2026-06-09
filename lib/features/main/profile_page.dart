@@ -88,7 +88,9 @@ class _ProfilePageState extends State<ProfilePage> {
   /// ================= LOGOUT =================
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await prefs.remove('token');
+    await prefs.remove('role');
+    await prefs.remove('email');
     CartService.clearCart(save: false);
 
     if (!mounted) return;

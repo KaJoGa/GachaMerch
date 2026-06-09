@@ -1,13 +1,20 @@
 import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 class WishlistService {
-  static const String _key = "wishlist_items";
+  static Future<String?> _getKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString("email");
+    if (email == null) return null;
+    return "wishlist_$email";
+  }
 
   static Future<List<Map<String, dynamic>>> list() async {
     final prefs = await SharedPreferences.getInstance();
-    final rawItems = prefs.getStringList(_key) ?? [];
+    final key = await _getKey();
+    if (key == null) return [];
+    
+    final rawItems = prefs.getStringList(key) ?? [];
 
     return rawItems
         .map((raw) => jsonDecode(raw))
@@ -18,6 +25,9 @@ class WishlistService {
 
   static Future<bool> add(Map<String, dynamic> product) async {
     final prefs = await SharedPreferences.getInstance();
+    final key = await _getKey();
+    if (key == null) return false;
+
     final items = await list();
     final id = product["id"]?.toString();
 
@@ -35,7 +45,7 @@ class WishlistService {
     });
 
     await prefs.setStringList(
-      _key,
+      key,
       items.map((item) => jsonEncode(item)).toList(),
     );
     return true;
@@ -43,6 +53,9 @@ class WishlistService {
 
   static Future<bool> remove(dynamic productId) async {
     final prefs = await SharedPreferences.getInstance();
+    final key = await _getKey();
+    if (key == null) return false;
+
     final id = productId?.toString();
     if (id == null) return false;
 
@@ -54,7 +67,7 @@ class WishlistService {
     if (filtered.length == items.length) return false;
 
     await prefs.setStringList(
-      _key,
+      key,
       filtered.map((item) => jsonEncode(item)).toList(),
     );
     return true;
