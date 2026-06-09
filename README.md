@@ -10,12 +10,12 @@ Company: GachaMerch
 
 Project name: Genshin Import
 
-Description: Genshin Import provides Teyvat weapons and food items that users can view and buy. The app has two roles:
+Description: Genshin Import provides Teyvat weapons, food items, and artifacts that users can view and buy. The app has two roles:
 
 - Admin: manages items that are listed for sale.
 - User: views listed items and buys any available quantity as long as stock is sufficient.
 
-The original assignment asks for weapon CRUD. In this implementation, admin CRUD is implemented through the `listings` table: the master `weapons` and `foods` tables act as catalogs, while `listings` stores the items currently for sale, including sale price and stock.
+The original assignment asks for weapon CRUD. In this implementation, admin CRUD is implemented through the `listings` table: the master `weapons`, `foods`, and `artifacts` tables act as catalogs, while `listings` stores the items currently for sale, including sale price and stock.
 
 ## Tech Stack
 
@@ -69,7 +69,7 @@ The original assignment asks for weapon CRUD. In this implementation, admin CRUD
   - Green when stock is above 50%.
   - Yellow when stock is at or below 50%.
   - Red when stock is at or below 20%.
-- All / Weapons / Food segmented filter on Manage Sales.
+- All / Weapons / Food / Artifacts segmented filter on Manage Sales.
 - Price formatting with `$` on home, transactions, and admin pages.
 - Transaction records keep `item_name` and `unit_price` snapshots, so history remains readable even if listings are changed or deleted later.
 
@@ -187,7 +187,7 @@ Purpose:
 
 - Admin CRUD screen for sale listings.
 - Shows all sale listings with image, stock, and price.
-- Supports All / Weapons / Food filtering.
+- Supports All / Weapons / Food / Artifacts filtering.
 - Opens edit and delete actions.
 
 ### Catalog Picker Page
@@ -196,7 +196,7 @@ File: `lib/features/admin/manage_listings_page.dart`
 
 Purpose:
 
-- Admin selects a master item from weapons or foods.
+- Admin selects a master item from weapons, foods, or artifacts.
 - Supports tabs, search, and category filter.
 - Opens the sale listing form.
 
@@ -256,6 +256,7 @@ Base URL:
 | GET | `/weapons/:id` | No | Get one weapon from the catalog. |
 | GET | `/fetch/weapons` | No | Legacy weapon list route. |
 | GET | `/fetch/foods` | No | List food catalog. |
+| GET | `/artifacts` | No | List artifact catalog. |
 | GET | `/listings` | No | List items currently for sale. |
 | GET | `/catalog` | Admin | List master catalog items for admin listing creation. |
 | POST | `/listings` | Admin | Create a sale listing from an existing weapon or food. |
@@ -303,8 +304,6 @@ Important migration scripts:
 | `backend/scripts/migrateInitialStock.js` | Adds `initial_stock` for stock health indicator. |
 | `backend/scripts/migrateTransactions.js` | Creates the `transactions` table. |
 | `backend/scripts/migrateArtifacts.js` | Creates the `artifacts` table and updates `item_type` enum in `listings`. |
-| `backend/scripts/seedArtifacts.js` | Scrapes Genshin Fandom for artifacts and saves to DB (can be slow). |
-| `backend/scripts/seedMockArtifacts.js` | Seeds a small set of mock artifacts to avoid Fandom timeouts. |
 
 ## Setup and Run
 
@@ -347,18 +346,6 @@ node scripts/migrateListings.js
 node scripts/migrateInitialStock.js
 node scripts/migrateTransactions.js
 node scripts/migrateArtifacts.js
-```
-
-### 5. Run Database Seeders (Optional)
-
-If you want to populate your database with catalog data:
-
-```bash
-# Seed artifacts from Genshin Fandom (Will run in background batches)
-node scripts/seedArtifacts.js
-
-# Or, if Fandom server is blocking you, seed 3 mock artifacts instead:
-node scripts/seedMockArtifacts.js
 ```
 
 ### 5. Run Backend Server
@@ -457,7 +444,7 @@ Custom font family has not been added yet. The app currently uses the default Fl
 ## Creativity Points
 
 - The sale flow is implemented through `listings`, making master catalog data reusable and keeping admin actions focused on what is currently for sale.
-- The app supports weapons and food, even though the assignment focuses on weapons.
+- The app supports weapons, food, and artifacts, even though the assignment focuses on weapons.
 - Transaction history stores snapshots to avoid broken history when listings change.
 - Admin stock health indicator makes low-stock items easy to notice.
 - DB-down handling improves demo reliability by showing a clear MySQL/XAMPP error.
@@ -476,12 +463,12 @@ Completed:
 - Transaction history.
 - Profile with role-based admin access.
 - Visible theme customization.
+- Standalone product detail page.
+- Standalone cart page and wishlist.
 - This README documentation file.
 
 Still open:
 
-- Standalone weapon detail page.
-- Standalone cart page.
 - Custom font family.
 - Final screenshot images for every page.
 
