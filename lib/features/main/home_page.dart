@@ -41,12 +41,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
     'https://static.wikia.nocookie.net/gensin-impact/images/6/6e/To_Temper_Thyself_and_Journey_Far.png',
   ];
 
-  final List<Map<String, dynamic>> _menuItems = [
-    {'icon': Icons.category, 'label': 'Category'},
-    {'icon': Icons.flash_on, 'label': 'Flash Sale'},
-    {'icon': Icons.local_offer, 'label': 'Voucher'},
-    {'icon': Icons.card_giftcard, 'label': 'Gift'},
-  ];
+
 
   List<Map<String, dynamic>> _allProducts = [];
   List<Map<String, dynamic>> _products = [];
@@ -394,13 +389,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
     }).toList();
   }
 
-  void _onMenuTap(String label) {
-    if (label == 'Category') {
-      _showCategoryFilter();
-    } else {
-      _showSnack('$label feature is coming soon!', isError: false);
-    }
-  }
+
 
   void _showCategoryFilter() {
     final categories = _allProducts.map((p) => p['category']?.toString() ?? 'Unknown').toSet().toList();
@@ -490,42 +479,26 @@ class _MainMenuPageState extends State<MainMenuPage> {
           ),
         ),
 
-        /// MENU
-        Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 30),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _menuItems.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio: 0.85,
-            ),
-            itemBuilder: (context, i) => InkWell(
-              onTap: () => _onMenuTap(_menuItems[i]['label']),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 26,
-                    backgroundColor: AppColors.secondary.withValues(alpha: 0.12),
-                    child: Icon(_menuItems[i]['icon'], color: AppColors.secondary),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(_menuItems[i]['label']),
-                ],
-              ),
-            ),
-          ),
-        ),
+        const SizedBox(height: 16),
 
-        /// TITLE
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Text(
-            'Recommended For You',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        /// TITLE & FILTER
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Recommended For You',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: _showCategoryFilter,
+                tooltip: 'Filter Category',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
           ),
         ),
 
