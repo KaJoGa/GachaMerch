@@ -501,7 +501,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `token`) VALUES
-(4, 'Reiki', 'reiikierana@gmail.com', '$2b$10$P7uBMfNGZEsqyrpEzreOOubjeBfCOWF3kMX85Y.olr22zbunYMCy.', 'user', '9e1be655fe5056401cf8548b645291f3eb15ddf6');
+(4, 'Reiki', 'reiikierana@gmail.com', '$2b$10$P7uBMfNGZEsqyrpEzreOOubjeBfCOWF3kMX85Y.olr22zbunYMCy.', 'user', '9e1be655fe5056401cf8548b645291f3eb15ddf6'),
+(5, 'Admin', 'admin@gachamerch.com', '$2b$10$w79pisfjDH0ujBxmR8NHuOuutp277D9NWBljWNzCtsH8vuTJVU4Le', 'admin', 'token_admin_123'),
+(6, 'User', 'user@gachamerch.com', '$2b$10$TPyTvAoO/2THaPXrC7m5meLeaOvgMUjGMNUqXCIP9RCJJOLgyXKHG', 'user', 'token_user_123');
 
 -- --------------------------------------------------------
 
@@ -798,7 +800,7 @@ ALTER TABLE `foods`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `weapons`
