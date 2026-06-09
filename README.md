@@ -384,6 +384,17 @@ run_web.bat
 
 That batch file starts the backend, waits briefly, runs Flutter Web on port 5000, then stops the backend when Flutter closes.
 
+### 7. Demo Accounts
+
+If you imported `gachamerch.sql`, the database is pre-seeded with the following accounts for testing:
+
+- **Admin Account**:
+  - Email: `admin@gachamerch.com`
+  - Password: `admin`
+- **User Account**:
+  - Email: `user@gachamerch.com`
+  - Password: `user`
+
 ## UI Components Used
 
 The project uses more than five Flutter UI component types:
